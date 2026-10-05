@@ -1,0 +1,13 @@
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@tailwind base;@tailwind components;@tailwind utilities;
+:root{--bg:#fff;--fg:#14161a;--accent:#4f46e5;--card:#f3f4f7;--radius:18px}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1013;--fg:#eceef2;--card:#1a1d23;--accent:#818cf8}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:root{--ok:#15803d;--warn:#b45309;--muted:#5b6170}
+@media (prefers-color-scheme:dark){:root{--ok:#4ade80;--warn:#fbbf24;--muted:#a3a9b8}}
+.btn{min-height:48px;padding:0 20px;border-radius:var(--radius);background:var(--card);font-weight:600;transition:transform .15s}
+.btn:active{transform:scale(.97)}.btn-accent{background:var(--accent);color:#fff}

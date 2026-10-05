@@ -1,0 +1,7 @@
+node_modules
+dist
+# android/ is generated in CI by `cap add android` + scripts/patch-android.mjs
+android/
+*.apk
+*.aab
+.DS_Store
