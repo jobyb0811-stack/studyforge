@@ -7,6 +7,8 @@ import { navigate } from '../nav';
 const at = (date: string, time: string) => new Date(`${date}T${time}:00`).getTime();
 const nextDaily = (time: string) => { const [h, m] = time.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0);
   if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1); return d.getTime(); };
+const inQuiet = (ms: number, q: { on: boolean; start: string; end: string }) => { if (!q.on) return false; const d = new Date(ms); const m = d.getHours() * 60 + d.getMinutes();
+  const a = Number(q.start.slice(0, 2)) * 60 + Number(q.start.slice(3)), b = Number(q.end.slice(0, 2)) * 60 + Number(q.end.slice(3)); return a <= b ? m >= a && m < b : m >= a || m < b; };
 const DAILY_TITLE: Record<DailyKey, string> = { morning: 'Morning start', review: 'Nightly review', winddown: 'Wind-down' };
 
 /** Call on app open and after EVERY schedule edit. Rebuilds all future alarms from Dexie. */
@@ -24,7 +26,7 @@ export async function rescheduleAll() {
     const base = { blockId: b.id, startAt: t, title: b.title, subject: subj?.name ?? '', color: cat?.color ?? '#4f46e5',
       topics: tps.slice(0, 3).map(x => x.title), more: Math.max(0, tps.length - 3) };
     out.push({ ...base, id: `${b.id}:alarm`, kind: 'alarm', triggerAt: t });
-    if (s.leadMin > 0 && t - s.leadMin * 60000 > now) out.push({ ...base, id: `${b.id}:lead`, kind: 'lead', triggerAt: t - s.leadMin * 60000 });
+    if (s.leadMin > 0 && t - s.leadMin * 60000 > now && !inQuiet(t - s.leadMin * 60000, s.quiet)) out.push({ ...base, id: `${b.id}:lead`, kind: 'lead', triggerAt: t - s.leadMin * 60000 });
   }
   (Object.keys(s.daily) as DailyKey[]).forEach(k => { if (!s.daily[k].on) return; const t = nextDaily(s.daily[k].time);
     out.push({ id: `daily-${k}:alarm`, blockId: `daily-${k}`, kind: 'alarm', triggerAt: t, baseAt: t, startAt: t, repeat: true, title: DAILY_TITLE[k], subject: 'Daily alarm', topics: [] }); });

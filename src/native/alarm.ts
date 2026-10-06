@@ -17,6 +17,8 @@ export interface AlarmPluginAPI {
   getAlarmInfo(o: { blockId: string }): Promise<{ info: NativeAlarm | null }>;
   alarmAction(o: { blockId: string; action: PendingAction['action']; minutes?: number; reason?: string }): Promise<PendingAction>;
   consumePendingActions(): Promise<{ actions: PendingAction[] }>;
+  keepAwake(o: { on: boolean }): Promise<void>;
+  saveBackup(o: { name: string; data: string }): Promise<{ path: string }>;
   setSound(o: { sound: string }): Promise<{ sound: string }>;
   getSound(): Promise<{ sound: string }>;
   pickRingtone(): Promise<{ sound: string }>;
@@ -29,7 +31,7 @@ const web: AlarmPluginAPI = {
   openExactAlarmSettings: async () => {}, openFullScreenSettings: async () => {}, requestBatteryExemption: async () => {},
   getScheduled: async () => ({ alarms: [], now: Date.now() }), getAlarmInfo: async () => ({ info: null }),
   alarmAction: async o => ({ id: String(Date.now()), blockId: o.blockId, action: o.action, minutes: o.minutes ?? 5, reason: o.reason ?? '', at: Date.now(), snoozes: 0, snoozesLeft: 3 }),
-  consumePendingActions: async () => ({ actions: [] }), setSound: async o => o, getSound: async () => ({ sound: 'soft' }), pickRingtone: async () => ({ sound: 'soft' }),
+  saveBackup: async o => ({ path: o.name }), keepAwake: async () => {}, consumePendingActions: async () => ({ actions: [] }), setSound: async o => o, getSound: async () => ({ sound: 'soft' }), pickRingtone: async () => ({ sound: 'soft' }),
   addListener: async () => ({ remove: async () => {} }),
 };
 export const Alarm = registerPlugin<AlarmPluginAPI>('AlarmPlugin', { web: () => Promise.resolve(web) });

@@ -3,13 +3,17 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.NotificationManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.PowerManager
+import android.provider.MediaStore
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.activity.result.ActivityResult
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -24,14 +28,16 @@ import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
 import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 
 @CapacitorPlugin(name = "AlarmPlugin", permissions = [Permission(strings = [Manifest.permission.POST_NOTIFICATIONS], alias = "notifications")])
 class AlarmPlugin : Plugin() {
     companion object {
         private val instances = CopyOnWriteArrayList<AlarmPlugin>()
-        fun ping(rec: JSONObject) { val o = JSObject(rec.toString()); instances.forEach { it.notifyListeners("alarmAction", o) } }
+        fun ping(rec: JSONObject) { val o = JSObject(rec.toString()); instances.forEach { it.emit(o) } }
     }
+    fun emit(o: JSObject) { notifyListeners("alarmAction", o) }
     override fun load() { instances.add(this) }
     override fun handleOnDestroy() { instances.remove(this) }
 
@@ -101,6 +107,28 @@ class AlarmPlugin : Plugin() {
         call.resolve(JSObject(r.toString()))
     }
     @PluginMethod fun consumePendingActions(call: PluginCall) { call.resolve(JSObject().put("actions", AlarmStore.takePending(context))) }
+    @PluginMethod fun keepAwake(call: PluginCall) {
+        val on = call.getBoolean("on", true) ?: true
+        activity.runOnUiThread { if (on) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+        call.resolve()
+    }
+    /** Writes a JSON backup to Downloads/StudyForge (API 29+, no permission needed) or app storage on older phones. */
+    @PluginMethod fun saveBackup(call: PluginCall) {
+        val name = call.getString("name") ?: "studyforge-backup.json"; val data = call.getString("data") ?: return call.reject("data required")
+        try {
+            val where: String
+            if (Build.VERSION.SDK_INT >= 29) {
+                val v = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, name); put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/StudyForge") }
+                val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v) ?: return call.reject("Could not create file")
+                context.contentResolver.openOutputStream(uri)!!.use { it.write(data.toByteArray()) }
+                where = "Downloads/StudyForge/" + name
+            } else {
+                val f = File(context.getExternalFilesDir(null) ?: context.filesDir, name); f.writeText(data); where = f.absolutePath
+            }
+            call.resolve(JSObject().put("path", where))
+        } catch (ex: Exception) { call.reject(ex.message ?: "save failed") }
+    }
     @PluginMethod fun setSound(call: PluginCall) { AlarmStore.setSound(context, call.getString("sound") ?: "soft"); call.resolve(JSObject().put("sound", AlarmStore.sound(context))) }
     @PluginMethod fun getSound(call: PluginCall) { call.resolve(JSObject().put("sound", AlarmStore.sound(context))) }
     @PluginMethod fun pickRingtone(call: PluginCall) {

@@ -9,7 +9,7 @@ function SlideToStart({ onDone, disabled }: { onDone: () => void; disabled: bool
   return (<div ref={track} className="relative h-16 rounded-full select-none" style={{ background: 'var(--card)', touchAction: 'none' }}>
     <span className="absolute inset-0 flex items-center justify-center font-semibold opacity-70">Slide to start →</span>
     <div role="slider" aria-label="Slide to start" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((x / max()) * 100)}
-      className="absolute top-1 left-1 h-14 w-14 rounded-full flex items-center justify-center text-white text-2xl" style={{ background: 'var(--accent)', transform: `translateX(${x}px)` }}
+      className="absolute top-1 left-1 h-14 w-14 rounded-full flex items-center justify-center text-on text-2xl" style={{ background: 'var(--accent)', transform: `translateX(${x}px)` }}
       onPointerDown={e => { if (disabled) return; drag.current = true; e.currentTarget.setPointerCapture(e.pointerId); }}
       onPointerMove={e => { if (drag.current && track.current) setX(Math.max(0, Math.min(max(), e.clientX - track.current.getBoundingClientRect().left - 32))); }}
       onPointerUp={() => { drag.current = false; if (x > max() * 0.85) onDone(); else setX(0); }}>▶</div>

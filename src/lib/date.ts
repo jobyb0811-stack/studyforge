@@ -1,0 +1,17 @@
+export const pad = (n: number) => String(n).padStart(2, '0');
+export const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export const todayStr = () => ymd(new Date());
+export const parseYmd = (s: string) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+export const addDays = (s: string, n: number) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+export const diffDays = (a: string, b: string) => Math.round((parseYmd(b).getTime() - parseYmd(a).getTime()) / 864e5);
+export const dayOfWeek = (s: string) => parseYmd(s).getDay();
+export const range = (a: string, b: string) => { const o: string[] = []; for (let d = a; d <= b; d = addDays(d, 1)) o.push(d); return o; };
+export const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+export const fromMin = (m: number) => { m = Math.max(0, Math.min(1439, Math.round(m))); return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`; };
+export const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+export const atMs = (date: string, time: string) => new Date(`${date}T${time}:00`).getTime();
+export const fmtTime = (t: string, h12: boolean) => { if (!h12) return t; const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${pad(m)} ${h < 12 ? 'AM' : 'PM'}`; };
+export const fmtDur = (min: number) => `${Math.floor(min / 60)}h ${pad(min % 60)}m`;
+export const fmtClock = (ms: number) => { const s = Math.max(0, Math.ceil(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return (h ? `${h}:${pad(m)}` : pad(m)) + `:${pad(s % 60)}`; };
+export const shortDate = (s: string) => parseYmd(s).toLocaleDateString([], { day: 'numeric', month: 'short' });

@@ -1,7 +1,6 @@
 node_modules
 dist
-# android/ is generated in CI by `cap add android` + scripts/patch-android.mjs
-android/
+android/.gradle
+android/build
+android/app/build
 *.apk
-*.aab
-.DS_Store
